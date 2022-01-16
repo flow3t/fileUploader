@@ -4,8 +4,6 @@ const fs = require('fs');
 const path = require("path");
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-const testFolder = './tests/';
-const newPath = './moveHere';
 const multer = require('multer');
 const res = require('express/lib/response');
 
@@ -37,7 +35,7 @@ function folderCreator() { //Funzione che crea la cartella anno/mese/giorno in c
     fs.mkdirSync(dir);
   };
 
-  dir = dir + '/' + day + ' ' + d.getDate();
+  dir = dir + '/' + day + '_' + d.getDate();
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
   };
@@ -71,7 +69,11 @@ let fileStorageEngine = multer.diskStorage({ //funzione async di storage di mult
   },
 })
 
-let upload = multer({ storage: fileStorageEngine});
+let upload = multer({ 
+  storage: fileStorageEngine,
+  limits: {fileSize: 2000000000 }
+});
+
 
 let hostname = 'localhost';
 let port = '4000';
@@ -88,14 +90,20 @@ app.post('/upload', upload.single('image'), (req, res) => {
   res.statusCode = 200;
   res.setHeader('Content-Type','text/plain');
   console.log(req.file);
-  res.send('Single file upload successful');
+  res.send('Single file upload successful\nFile path:' + req.file.path);
 });
 
-app.post('/multirequest', upload.array('images', 8), (req, res) => {
+app.post('/multirequest', upload.array('images', 12), (req, res) => {
   res.statusCode = 200;
   res.setHeader('Content-Type','text/plain');
   console.log(req.files);
-  res.send('Multiple filse upload successful');
+  let i = 0;
+  let finalRes = 'Multiple filse upload successful\nFiles path: ' + req.files[i].path + '\n';
+  for (i = 1; i < 12; i++) {
+    if (req.files[i] == null) break
+    else  finalRes = finalRes + req.files[i].path + '\n';
+  }
+  res.send(finalRes);
 });
 
 const server = http.createServer(app);
