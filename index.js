@@ -98,7 +98,7 @@ app.post('/multirequest', upload.array('images', 12), (req, res) => {
   res.setHeader('Content-Type','text/plain');
   console.log(req.files);
   let i = 0;
-  let finalRes = 'Multiple filse upload successful\nFiles path: ' + req.files[i].path + '\n';
+  let finalRes = 'Multiple files upload successful\nFiles path: ' + req.files[i].path + '\n';
   for (i = 1; i < 12; i++) {
     if (req.files[i] == null) break
     else  finalRes = finalRes + req.files[i].path + '\n';
