@@ -71,7 +71,15 @@ let fileStorageEngine = multer.diskStorage({ //funzione async di storage di mult
 
 let upload = multer({ 
   storage: fileStorageEngine,
-  limits: {fileSize: 2000000000 }
+  limits: {fileSize: 12 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
+      cb(null, true);
+    } else {
+      req.fileValidationError = 'Only .png, .jpg and .jpeg format allowed!';
+      return cb(null, false, new Error('Only .png, .jpg and .jpeg format allowed!!'));
+    }
+  }
 });
 
 
@@ -87,13 +95,21 @@ app.get("/", (req, res) => {
 });
 
 app.post('/upload', upload.single('image'), (req, res) => {
+  if(req.fileValidationError) {
+    res.statusCode = 500;
+    return  res.sendFile(path.join(__dirname, "fileValidationError.html")); //CONTROLLA CHE I FILE SIANO IMMAGINI
+}
   res.statusCode = 200;
   res.setHeader('Content-Type','text/plain');
   console.log(req.file);
-  res.send('Single file upload successful\nFile path:' + req.file.path);
+  res.send('Single file upload successful\nFile path: ' + req.file.path);
 });
 
 app.post('/multirequest', upload.array('images', 12), (req, res) => {
+  if(req.fileValidationError) {
+    res.statusCode = 500;
+    return  res.sendFile(path.join(__dirname, "fileValidationError.html")); //CONTROLLA CHE I FILE SIANO IMMAGINI
+}
   res.statusCode = 200;
   res.setHeader('Content-Type','text/plain');
   console.log(req.files);
@@ -105,6 +121,11 @@ app.post('/multirequest', upload.array('images', 12), (req, res) => {
   }
   res.send(finalRes);
 });
+
+app.use(function (err, req, res, next) {
+  res.statusCode = 500;
+  res.sendFile(path.join(__dirname, "fileSizeError.html"));
+})
 
 const server = http.createServer(app);
 
